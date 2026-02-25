@@ -1,20 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupportTeam | Consulta tu Folio</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #6a0dad, #20c997, #00cfff);
+  background-size: 300% 300%;
+  animation: fondoTornasol 8s ease infinite;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+@keyframes fondoTornasol {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+
+.container {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+h1 {
+  margin-bottom: 10px;
+}
+
+label {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+button {
+  margin-top: 15px;
+  padding: 12px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: #6a0dad;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+#resultado {
+  margin-top: 20px;
+  min-height: 60px;
+}
+
+.zoom {
+  animation: zoomIn 0.3s ease;
+}
+
+@keyframes zoomIn {
+  from {transform: scale(0.8); opacity: 0;}
+  to {transform: scale(1); opacity: 1;}
+}
+
+.whatsapp-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #25D366;
+  color: white;
+  padding: 15px 18px;
+  border-radius: 50px;
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.footer {
+  margin-top: 15px;
+  font-size: 12px;
+  color: #666;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>SupportTeam</h1>
+  <label>Ingresa tu folio</label>
+  <input type="text" id="folio" placeholder="Ejemplo: 1001">
+  <button onclick="buscarFolio()">Consultar</button>
+  <div id="resultado"></div>
+  <div class="footer">
+    Creado, editado y animado por CHATGPT Y YISUSM98
+  </div>
+</div>
+
 <script>
-function buscar() {
+function escribirMaquina(texto, elemento) {
+  elemento.innerHTML = "";
+  let i = 0;
+  const intervalo = setInterval(() => {
+    elemento.innerHTML += texto.charAt(i);
+    i++;
+    if (i >= texto.length) clearInterval(intervalo);
+  }, 25);
+}
+
+function buscarFolio() {
   const folio = document.getElementById("folio").value.trim();
   const datos = JSON.parse(localStorage.getItem("reparaciones")) || [];
+  const resultado = document.getElementById("resultado");
+  resultado.classList.remove("zoom");
 
   const encontrado = datos.find(item => item.folio === folio);
 
-  const resultado = document.getElementById("resultado");
+  setTimeout(() => {
+    resultado.classList.add("zoom");
 
-  if (encontrado) {
-    resultado.innerText = "Estatus: " + encontrado.estatus;
-  } else {
-    resultado.innerText = "Folio no encontrado";
-  }
+    if (encontrado) {
+      escribirMaquina(
+        `Equipo: ${encontrado.equipo}\nEstatus: ${encontrado.estatus}\nFecha: ${encontrado.fecha}`,
+        resultado
+      );
+
+      if (encontrado.estatus.toLowerCase() === "listo") {
+        const mensaje = `Hola SupportTeam, acabo de consultar mi folio ${folio}. Aparece como listo, ¿en qué horario puedo pasar a recogerlo?`;
+        const numero = "521XXXXXXXXXX"; // CAMBIA POR TU NÚMERO
+        const link = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+        resultado.innerHTML += `<br><br>
+          <a href="${link}" target="_blank" class="whatsapp-float">
+          Enviar WhatsApp
+          </a>`;
+      }
+
+    } else {
+      resultado.innerHTML = "<span style='color:red;'>Folio no encontrado</span>";
+    }
+
+  }, 200);
 }
 </script>
 
+</body>
+</html>
 
 
 
