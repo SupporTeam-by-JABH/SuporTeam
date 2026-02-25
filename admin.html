@@ -5,47 +5,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin SupportTeam</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
 body {
   margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: #1e1e1e;
+  font-family: 'Poppins', sans-serif;
+  background: #111;
   color: white;
   padding: 30px;
 }
 
 h1 {
+  text-align: center;
   margin-bottom: 20px;
 }
 
 input {
-  padding: 12px;
-  margin: 8px 0;
   width: 100%;
-  border-radius: 8px;
+  padding: 14px;
+  margin: 8px 0;
+  border-radius: 10px;
   border: none;
+  font-size: 16px;
 }
 
 button {
-  padding: 12px;
-  margin-top: 10px;
-  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 8px;
+  border-radius: 10px;
   border: none;
-  background: white;
-  color: black;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 600;
 }
 
-button:hover {
-  opacity: 0.8;
+.btn-main {
+  background: #20c997;
+  color: black;
+  width: 100%;
+}
+
+.btn-edit {
+  background: #ffc107;
+  color: black;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
 }
 
 .card {
-  background: #2c2c2c;
+  background: #1e1e1e;
   padding: 15px;
   margin-top: 15px;
-  border-radius: 10px;
+  border-radius: 15px;
+}
+
+.spotify {
+  margin-top: 30px;
+  text-align: center;
 }
 </style>
 </head>
@@ -59,65 +78,113 @@ button:hover {
 <input type="text" id="estatus" placeholder="Estatus">
 <input type="text" id="fecha" placeholder="Fecha estimada">
 
-<button onclick="agregar()">Agregar / Actualizar</button>
+<button class="btn-main" onclick="guardar()">Guardar / Actualizar</button>
 
 <div id="lista"></div>
 
-<script>
-const contraseña = "1234";
+<div class="spotify">
+  <h3>Modo Trabajo 🎶</h3>
+  <iframe style="border-radius:12px"
+    src="https://open.spotify.com/embed/playlist/37i9dQZF1DX0XUsuxWHRQd"
+    width="100%" height="152"
+    frameBorder="0"
+    allowfullscreen=""
+    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture">
+  </iframe>
+</div>
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  getDocs, 
+  deleteDoc, 
+  doc, 
+  updateDoc 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD0xhp8j7NPgAwW8LufRMt1MS3Pgwd_avk",
+  authDomain: "supportteam-139a1.firebaseapp.com",
+  projectId: "supportteam-139a1",
+  storageBucket: "supportteam-139a1.firebasestorage.app",
+  messagingSenderId: "134164379249",
+  appId: "1:134164379249:web:c07ae6632ae7c287a80dd0"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const contraseña = "1234";
 let acceso = prompt("Ingrese contraseña:");
 if (acceso !== contraseña) {
   document.body.innerHTML = "Acceso denegado";
 }
 
-function obtenerDatos() {
-  return JSON.parse(localStorage.getItem("reparaciones")) || [];
-}
+let editandoId = null;
 
-function guardarDatos(datos) {
-  localStorage.setItem("reparaciones", JSON.stringify(datos));
-}
+window.guardar = async function() {
+  const folio = document.getElementById("folio").value.trim();
+  const modelo = document.getElementById("modelo").value.trim();
+  const estatus = document.getElementById("estatus").value.trim();
+  const fecha = document.getElementById("fecha").value.trim();
 
-function agregar() {
-  let datos = obtenerDatos();
+  if (editandoId) {
+    await updateDoc(doc(db, "reparaciones", editandoId), {
+      folio, modelo, estatus, fecha
+    });
+    editandoId = null;
+  } else {
+    await addDoc(collection(db, "reparaciones"), {
+      folio, modelo, estatus, fecha
+    });
+  }
 
-  const nuevo = {
-    folio: document.getElementById("folio").value.trim(),
-    modelo: document.getElementById("modelo").value.trim(),
-    estatus: document.getElementById("estatus").value.trim(),
-    fecha: document.getElementById("fecha").value.trim()
-  };
-
-  datos = datos.filter(item => item.folio !== nuevo.folio);
-  datos.push(nuevo);
-
-  guardarDatos(datos);
+  limpiar();
   mostrar();
 }
 
-function eliminar(folio) {
-  let datos = obtenerDatos();
-  datos = datos.filter(item => item.folio !== folio);
-  guardarDatos(datos);
-  mostrar();
-}
-
-function mostrar() {
+async function mostrar() {
   const lista = document.getElementById("lista");
   lista.innerHTML = "";
-  const datos = obtenerDatos();
 
-  datos.forEach(item => {
+  const querySnapshot = await getDocs(collection(db, "reparaciones"));
+
+  querySnapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+
     lista.innerHTML += `
       <div class="card">
-        <strong>${item.folio}</strong> - ${item.modelo}<br>
-        ${item.estatus} | ${item.fecha}
+        <strong>${data.folio}</strong> - ${data.modelo}<br>
+        ${data.estatus} | ${data.fecha}
         <br><br>
-        <button onclick="eliminar('${item.folio}')">Eliminar</button>
+        <button class="btn-edit" onclick="editar('${docSnap.id}', '${data.folio}', '${data.modelo}', '${data.estatus}', '${data.fecha}')">Editar</button>
+        <button class="btn-delete" onclick="eliminar('${docSnap.id}')">Eliminar</button>
       </div>
     `;
   });
+}
+
+window.editar = function(id, folio, modelo, estatus, fecha) {
+  editandoId = id;
+  document.getElementById("folio").value = folio;
+  document.getElementById("modelo").value = modelo;
+  document.getElementById("estatus").value = estatus;
+  document.getElementById("fecha").value = fecha;
+}
+
+window.eliminar = async function(id) {
+  await deleteDoc(doc(db, "reparaciones", id));
+  mostrar();
+}
+
+function limpiar() {
+  document.getElementById("folio").value = "";
+  document.getElementById("modelo").value = "";
+  document.getElementById("estatus").value = "";
+  document.getElementById("fecha").value = "";
 }
 
 mostrar();
