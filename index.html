@@ -11,10 +11,30 @@
 body{
   margin:0;
   font-family:'Poppins',sans-serif;
-  background:linear-gradient(to right,#2c5364,#203a43,#0f2027);
   color:white;
   text-align:center;
   padding:40px;
+  background: linear-gradient(-45deg, #6a0dad, #00c9a7, #800020, #c77dff, #ff1493);
+  background-size: 400% 400%;
+  animation: tornasol 10s ease infinite;
+}
+
+@keyframes tornasol {
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+#reloj{
+  position:absolute;
+  top:20px;
+  right:30px;
+  font-size:18px;
+  font-weight:600;
+  background:rgba(0,0,0,0.3);
+  padding:10px 15px;
+  border-radius:10px;
+  backdrop-filter:blur(5px);
 }
 
 input{
@@ -34,14 +54,26 @@ button{
   font-weight:600;
   cursor:pointer;
   margin-left:5px;
+  transition:0.3s;
+}
+
+button:hover{
+  transform:scale(1.05);
 }
 
 .result{
-  margin-top:30px;
-  background:rgba(255,255,255,0.1);
-  padding:20px;
-  border-radius:15px;
+  margin-top:40px;
+  background:rgba(0,0,0,0.4);
+  padding:25px;
+  border-radius:20px;
   display:inline-block;
+  min-width:280px;
+  animation:fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:translateY(0);}
 }
 
 .fireworks{
@@ -53,10 +85,29 @@ button{
   from{transform:scale(1);}
   to{transform:scale(1.3);}
 }
+
+.whatsapp{
+  display:inline-block;
+  margin-top:15px;
+  padding:12px 18px;
+  background:#25D366;
+  color:white;
+  border-radius:12px;
+  text-decoration:none;
+  font-weight:600;
+}
+
+.footer{
+  margin-top:60px;
+  font-size:14px;
+  opacity:0.8;
+}
 </style>
 </head>
 
 <body>
+
+<div id="reloj"></div>
 
 <h1>Consulta tu Reparación</h1>
 
@@ -64,6 +115,10 @@ button{
 <button onclick="buscar()">Consultar</button>
 
 <div id="resultado"></div>
+
+<div class="footer">
+Creado, Editado y Animado por (ChatGPT y JB)
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -83,6 +138,17 @@ const firebaseConfig = {
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+// RELOJ DIGITAL
+function actualizarReloj(){
+  const ahora=new Date();
+  const fecha=ahora.toLocaleDateString();
+  const hora=ahora.toLocaleTimeString();
+  document.getElementById("reloj").innerHTML=`${fecha} | ${hora}`;
+}
+setInterval(actualizarReloj,1000);
+actualizarReloj();
+
+// BUSCAR FOLIO
 window.buscar=async function(){
   const folio=folioInput.value.trim();
   const querySnapshot=await getDocs(collection(db,"reparaciones"));
@@ -94,11 +160,22 @@ window.buscar=async function(){
       encontrado=true;
 
       let fuegos="";
+      let botonWhats="";
       const estatus=data.estatus.toLowerCase();
+
       if(estatus.includes("reparado") || 
          estatus.includes("listo") ||
          estatus.includes("éxito")){
+
         fuegos="<div class='fireworks'>🎆🎇🎆</div>";
+
+        const mensaje=encodeURIComponent("Hola suportteam, mi estatus aparece como reparado ¿en que horario paso a recoger mi equipo?");
+        botonWhats=`<a class="whatsapp" target="_blank" href="https://wa.me/528145457703?text=${mensaje}">Enviar mensaje por WhatsApp</a>`;
+      }
+
+      if(estatus.includes("demora")){
+        const mensaje=encodeURIComponent("Hola suportteam, al revisar mi folio aparece como demora ¿tenemos algun detalle?");
+        botonWhats=`<a class="whatsapp" target="_blank" href="https://wa.me/528145457703?text=${mensaje}">Enviar mensaje por WhatsApp</a>`;
       }
 
       resultado.innerHTML=`
@@ -107,12 +184,13 @@ window.buscar=async function(){
           <p><strong>Estatus:</strong> ${data.estatus}</p>
           <p><strong>Fecha estimada:</strong> ${data.fecha}</p>
           ${fuegos}
+          ${botonWhats}
         </div>`;
     }
   });
 
   if(!encontrado){
-    resultado.innerHTML="<p>Folio no encontrado</p>";
+    resultado.innerHTML="<div class='result'>Folio no encontrado</div>";
   }
 }
 </script>
