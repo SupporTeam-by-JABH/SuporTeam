@@ -5,89 +5,93 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | SupportTeam</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
 <style>
 body{
   margin:0;
-  font-family:'Poppins',sans-serif;
-  background:linear-gradient(-45deg,#6a0dad,#00c9a7,#800020,#c77dff);
-  background-size:400% 400%;
-  animation:tornasol 10s ease infinite;
+  font-family:'Inter',sans-serif;
+  background:#000;
   color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.glass{
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.1);
+  padding:40px;
+  border-radius:25px;
+  width:350px;
   text-align:center;
-  padding:40px 20px;
-}
-
-@keyframes tornasol{
-  0%{background-position:0% 50%;}
-  50%{background-position:100% 50%;}
-  100%{background-position:0% 50%;}
-}
-
-.section-box{
-  background:rgba(0,0,0,0.4);
-  padding:25px;
-  border-radius:20px;
-  margin-top:30px;
 }
 
 input{
+  width:100%;
   padding:12px;
+  margin:8px 0;
   border-radius:12px;
   border:none;
-  width:250px;
-  margin:5px;
+  background:rgba(255,255,255,0.08);
+  color:white;
 }
 
 button{
-  padding:12px 18px;
+  width:100%;
+  padding:12px;
+  margin-top:10px;
   border-radius:12px;
   border:none;
-  background:#20c997;
+  background:white;
+  color:black;
   font-weight:600;
   cursor:pointer;
-  margin-top:10px;
+  transition:0.3s;
 }
 
-#relojAdmin{
+button:hover{
+  background:#ccc;
+}
+
+#reloj{
   position:absolute;
   top:20px;
-  right:20px;
-  background:rgba(0,0,0,0.4);
-  padding:10px 15px;
-  border-radius:12px;
-  font-weight:600;
+  right:30px;
+  font-weight:300;
+  opacity:0.7;
 }
 </style>
 </head>
 
 <body>
 
-<div id="loginBox" class="section-box">
-  <h2>Acceso Administrador</h2>
-  <input type="text" id="usuario" placeholder="Usuario"><br>
-  <input type="password" id="clave" placeholder="Contraseña"><br>
+<div id="reloj"></div>
+
+<div id="loginBox" class="glass">
+  <h2>Acceso Admin</h2>
+  <input type="text" id="usuario" placeholder="Usuario">
+  <input type="password" id="clave" placeholder="Contraseña">
   <button onclick="login()">Ingresar</button>
 </div>
 
-<div id="panelAdmin" style="display:none;">
-  <div id="relojAdmin"></div>
-  <h1>Panel de Control</h1>
-
-  <div class="section-box">
-    <h2>Agregar / Actualizar Reparación</h2>
-    <input type="text" id="folio" placeholder="Folio"><br>
-    <input type="text" id="modelo" placeholder="Modelo"><br>
-    <input type="text" id="estatus" placeholder="Estatus"><br>
-    <input type="text" id="fecha" placeholder="Fecha estimada"><br>
-    <button onclick="guardar()">Guardar</button>
-  </div>
+<div id="panel" class="glass" style="display:none;">
+  <h2>Gestión de Reparaciones</h2>
+  <input type="text" id="folio" placeholder="Folio">
+  <input type="text" id="modelo" placeholder="Modelo">
+  <input type="text" id="estatus" placeholder="Estatus">
+  <input type="text" id="fecha" placeholder="Fecha estimada">
+  
+  <button onclick="guardar()">Guardar / Crear</button>
+  <button onclick="editar()">Editar Folio</button>
+  <button onclick="cerrarSesion()">Cerrar Sesión</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc } 
+import { getFirestore, doc, setDoc, getDoc }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -106,10 +110,9 @@ const db = getFirestore(app);
 window.login = function(){
   if(usuario.value==="ym98" && clave.value==="Tigres98"){
     loginBox.style.display="none";
-    panelAdmin.style.display="block";
-    iniciarReloj();
+    panel.style.display="block";
   } else {
-    alert("Usuario o contraseña incorrectos");
+    alert("Credenciales incorrectas");
   }
 }
 
@@ -123,15 +126,31 @@ window.guardar = async function(){
   alert("Guardado correctamente");
 }
 
-function iniciarReloj(){
-  function actualizar(){
-    const ahora=new Date();
-    relojAdmin.innerHTML =
-      ahora.toLocaleDateString()+" | "+ahora.toLocaleTimeString();
+window.editar = async function(){
+  const snap = await getDoc(doc(db,"reparaciones",folio.value));
+  if(snap.exists()){
+    const data = snap.data();
+    modelo.value=data.modelo;
+    estatus.value=data.estatus;
+    fecha.value=data.fecha;
+    alert("Datos cargados para editar");
+  } else {
+    alert("Folio no encontrado");
   }
-  setInterval(actualizar,1000);
-  actualizar();
 }
+
+window.cerrarSesion = function(){
+  panel.style.display="none";
+  loginBox.style.display="block";
+}
+
+function reloj(){
+  const ahora=new Date();
+  document.getElementById("reloj").innerHTML=
+  ahora.toLocaleDateString()+" | "+ahora.toLocaleTimeString();
+}
+setInterval(reloj,1000);
+reloj();
 </script>
 
 </body>
