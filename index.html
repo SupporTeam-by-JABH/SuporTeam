@@ -22,7 +22,6 @@ body{
   #9d4edd);
   background-size:400% 400%;
   animation:tornasol 12s ease infinite;
-  transition:0.5s;
 }
 
 @keyframes tornasol{
@@ -58,35 +57,38 @@ button{
   background:rgba(0,0,0,0.4);
 }
 
-.verdeParpadeo{
-  animation:verdeFlash 1s infinite;
+.alerta-grande{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:80%;
+  background:rgba(0,0,0,0.95);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  z-index:999;
+  padding:30px;
+  animation:fadeIn 0.5s ease-in-out;
 }
 
-@keyframes verdeFlash{
-  0%{background:#00ff00;}
-  50%{background:#006400;}
-  100%{background:#00ff00;}
-}
-
-.alertaParpadeo{
-  animation:alertaFlash 1s infinite;
-}
-
-@keyframes alertaFlash{
-  0%{background:#ff0000;}
-  50%{background:#001aff;}
-  100%{background:#ff0000;}
+.alerta-grande h2{
+  font-size:32px;
+  margin-bottom:20px;
 }
 
 .whatsapp{
   display:inline-block;
   margin-top:20px;
-  padding:12px 18px;
+  padding:15px 25px;
   background:#25D366;
   color:white;
   border-radius:12px;
   text-decoration:none;
   font-weight:600;
+  font-size:18px;
 }
 
 .social-buttons{
@@ -105,6 +107,11 @@ button{
 
 .facebook{ background:#1877F2; }
 .maps{ background:#EA4335; }
+
+@keyframes fadeIn{
+  from{opacity:0;}
+  to{opacity:1;}
+}
 </style>
 </head>
 
@@ -116,6 +123,7 @@ button{
 <button onclick="buscar()">Consultar</button>
 
 <div id="resultado"></div>
+<div id="alertaEspecial"></div>
 
 <div class="social-buttons">
   <a class="facebook" target="_blank"
@@ -148,29 +156,51 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 window.buscar = async function(){
+  alertaEspecial.innerHTML="";
   const folio = folioInput.value.trim();
   const snap = await getDoc(doc(db,"reparaciones",folio));
 
   if(snap.exists()){
     const data = snap.data();
-    let clase="";
-    let boton="";
-    const estatus=data.estatus.toLowerCase();
-
-    if(estatus.includes("reparado")||estatus.includes("listo")){
-      clase="verdeParpadeo";
-    }
-
-    if(estatus.includes("demora")){
-      clase="alertaParpadeo";
-    }
+    const estatus = data.estatus.toLowerCase();
 
     resultado.innerHTML=`
-      <div class="resultado-box ${clase}">
+      <div class="resultado-box">
         <h2>${data.modelo}</h2>
         <p><strong>Estatus:</strong> ${data.estatus}</p>
         <p><strong>Fecha estimada:</strong> ${data.fecha}</p>
       </div>`;
+
+    // REPARADO
+    if(estatus.includes("reparado") || estatus.includes("listo")){
+      const mensaje=encodeURIComponent(
+      "Hola SuportTeam, mi estatus aparece como reparado ¿En que horario puedo pasar a recogerlo?");
+      
+      alertaEspecial.innerHTML=`
+        <div class="alerta-grande">
+          <h2>Favor de mandar mensaje para pasar a recoger su equipo</h2>
+          <a class="whatsapp" target="_blank"
+          href="https://wa.me/528145457703?text=${mensaje}">
+          Enviar WhatsApp
+          </a>
+        </div>`;
+    }
+
+    // DEMORA
+    if(estatus.includes("demora")){
+      const mensaje=encodeURIComponent(
+      "Hola SuportTeam, el estatus de mi folio aparece como demora ¿Tenemos algun problema?");
+      
+      alertaEspecial.innerHTML=`
+        <div class="alerta-grande">
+          <h2>Tu equipo presenta demora</h2>
+          <a class="whatsapp" target="_blank"
+          href="https://wa.me/528145457703?text=${mensaje}">
+          Enviar WhatsApp
+          </a>
+        </div>`;
+    }
+
   } else {
     resultado.innerHTML="<div class='resultado-box'>Folio no encontrado</div>";
   }
