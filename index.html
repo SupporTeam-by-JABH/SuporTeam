@@ -14,12 +14,21 @@ body{
   text-align:center;
   color:white;
   padding:40px 20px;
-  background:#111;
+  background:linear-gradient(-45deg,
+  #6a0dad,
+  #c77dff,
+  #ff007f,
+  #00c9a7,
+  #9d4edd);
+  background-size:400% 400%;
+  animation:tornasol 12s ease infinite;
   transition:0.5s;
 }
 
-h1{
-  margin-bottom:30px;
+@keyframes tornasol{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
 }
 
 input{
@@ -34,10 +43,10 @@ button{
   padding:15px 20px;
   border-radius:12px;
   border:none;
-  background:#20c997;
+  background:white;
+  color:black;
   font-weight:600;
   cursor:pointer;
-  margin-left:10px;
 }
 
 .resultado-box{
@@ -45,12 +54,8 @@ button{
   padding:50px;
   border-radius:25px;
   font-size:24px;
-  animation:fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn{
-  from{opacity:0; transform:scale(0.9);}
-  to{opacity:1; transform:scale(1);}
+  backdrop-filter:blur(20px);
+  background:rgba(0,0,0,0.4);
 }
 
 .verdeParpadeo{
@@ -85,7 +90,7 @@ button{
 }
 
 .social-buttons{
-  margin-top:50px;
+  margin-top:40px;
 }
 
 .social-buttons a{
@@ -98,13 +103,8 @@ button{
   color:white;
 }
 
-.facebook{
-  background:#1877F2;
-}
-
-.maps{
-  background:#EA4335;
-}
+.facebook{ background:#1877F2; }
+.maps{ background:#EA4335; }
 </style>
 </head>
 
@@ -117,22 +117,21 @@ button{
 
 <div id="resultado"></div>
 
-<!-- BOTONES REDES -->
 <div class="social-buttons">
-  <a class="facebook" target="_blank" 
+  <a class="facebook" target="_blank"
   href="https://www.facebook.com/share/1AuqhGUCug/">
-  Síguenos en Facebook
+  Facebook
   </a>
 
-  <a class="maps" target="_blank" 
+  <a class="maps" target="_blank"
   href="https://maps.app.goo.gl/GQ1rXLUXYA8GogZh6">
-  Encuéntranos aquí
+  Google Maps
   </a>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, getDoc } 
+import { getFirestore, doc, getDoc }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -160,14 +159,10 @@ window.buscar = async function(){
 
     if(estatus.includes("reparado")||estatus.includes("listo")){
       clase="verdeParpadeo";
-      const mensaje=encodeURIComponent("Hola supportteam, mi estatus aparece como reparado ¿en qué horario paso a recoger mi equipo?");
-      boton=`<a class="whatsapp" target="_blank" href="https://wa.me/528145457703?text=${mensaje}">Contactar por WhatsApp</a>`;
     }
 
     if(estatus.includes("demora")){
       clase="alertaParpadeo";
-      const mensaje=encodeURIComponent("Hola supportteam, al revisar mi folio aparece como demora ¿tenemos algún detalle?");
-      boton=`<a class="whatsapp" target="_blank" href="https://wa.me/528145457703?text=${mensaje}">Contactar por WhatsApp</a>`;
     }
 
     resultado.innerHTML=`
@@ -175,7 +170,6 @@ window.buscar = async function(){
         <h2>${data.modelo}</h2>
         <p><strong>Estatus:</strong> ${data.estatus}</p>
         <p><strong>Fecha estimada:</strong> ${data.fecha}</p>
-        ${boton}
       </div>`;
   } else {
     resultado.innerHTML="<div class='resultado-box'>Folio no encontrado</div>";
